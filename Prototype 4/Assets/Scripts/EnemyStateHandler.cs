@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class EnemyStateHandler : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
+    //Pathfinding States
+        //Searching
+        //Wandering
+        //Chasing
         
-    }
+    //Territory States
+        //Mad (level gets scary and hostile)
+        //Neutral (not scary and hostile)
+        //More?
+
+
 }
