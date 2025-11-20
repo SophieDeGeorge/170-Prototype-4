@@ -44,7 +44,7 @@ public class EnemyStateHandler : MonoBehaviour
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         //State Switch Case Functions
-/*
+
     void DetermineAction()
     {
         switch (enemyState)
@@ -59,18 +59,19 @@ public class EnemyStateHandler : MonoBehaviour
                 //pick random area in a radius around the players last seen location, go there, look around, after set time return to idle
                 patrolArea = agent.destination;
                 // search radius around patrolArea
-            DetermineTerritory(Warning);
+            DetermineTerritory();
             break;
             case AIState.Chase:
                 //chase
                 //run straight to player as long as player is seen
-                while (Physics.Raycast(transform.position, (player.GetComponent<Transform>().position - transform.position, 100f, layerMask))) //raycast hits player
-                {
+                //while (Physics.Raycast(transform.position, (player.GetComponent<Transform>().position - transform.position, 100f, layerMask))) //raycast hits player
+                //{
                     agent.destination = player.GetComponent<Transform>().position;
-                    DetermineTerritory(Danger);
-                }
+                    territoryState = TerritoryState.Danger;
+                //}
                 agent.destination = player.GetComponent<Transform>().position;
-                DetermineAction(Patrol);
+                enemyState = AIState.Patrol;
+                
             
             break;
         }   
@@ -96,9 +97,25 @@ public class EnemyStateHandler : MonoBehaviour
     {
         if (other.tag == "Player")
         {
-            DetermineAction(Chase);
+            enemyState = AIState.Chase;
+            DetermineAction();
             //agent.destination = other.transform.position;
         }
+    }
+
+    void UpdateEnemy()
+    {
+        if (Physics.Raycast(transform.position, player.GetComponent<Transform>().position - transform.position, 100f, layerMask))
+        {
+            enemyState = AIState.Chase;
+        }
+        DetermineAction();
+        
+    }
+
+    void UpdateTerritory()
+    {
+        DetermineTerritory();
     }
 
     void Update()
@@ -106,5 +123,5 @@ public class EnemyStateHandler : MonoBehaviour
         //DetermineAction;
         //DetermineTerritory;
     }
-*/
+
 }
