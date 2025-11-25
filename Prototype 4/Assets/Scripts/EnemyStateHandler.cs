@@ -11,6 +11,7 @@ public class EnemyStateHandler : MonoBehaviour
     [SerializeField] private NavMeshAgent agent;
     private Vector3 patrolArea;
     LayerMask layerMask;
+    private Vector3 rayDir;
 
     void Awake()
     {
@@ -62,14 +63,9 @@ public class EnemyStateHandler : MonoBehaviour
             DetermineTerritory();
             break;
             case AIState.Chase:
-                //chase
-                //run straight to player as long as player is seen
-                //while (Physics.Raycast(transform.position, (player.GetComponent<Transform>().position - transform.position, 100f, layerMask))) //raycast hits player
-                //{
-                    agent.destination = player.GetComponent<Transform>().position;
-                    territoryState = TerritoryState.Danger;
-                //}
-                agent.destination = player.GetComponent<Transform>().position;
+                agent.destination = player.transform.position;
+                territoryState = TerritoryState.Danger;
+                agent.destination = player.transform.position;
                 enemyState = AIState.Patrol;
                 
             
@@ -98,25 +94,24 @@ public class EnemyStateHandler : MonoBehaviour
         if (other.tag == "Player")
         {
             UpdateEnemy();
-            Debug.Log("Enemy Collider Triggered");
+            //Debug.Log("Enemy Collider Triggered");
         }
     }
 
     void UpdateEnemy()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, player.GetComponent<Transform>().position - transform.position, out hit, layerMask))
+        if (Physics.Raycast(transform.position, player.transform.position - transform.position, out hit, layerMask))
         {
-            Debug.DrawRay(transform.position, (player.GetComponent<Transform>().position - transform.position) * hit.distance, Color.yellow);
+            rayDir = (player.GetComponent<Transform>().position - transform.position).normalized;
+            Debug.DrawRay(transform.position, rayDir * hit.distance, Color.yellow);
+            //Debug.DrawRay(transform.position, (player.GetComponent<Transform>().position - transform.position) * hit.distance, Color.yellow);
             //Debug.Log(hit.transform.name);
             
             if (hit.transform.name == "Player")
             {
                 enemyState = AIState.Chase;
                 Debug.Log("Chase activated");
-            } else
-            {
-                Debug.Log("Hit Wall");  
             }
         }
         DetermineAction();
