@@ -857,6 +857,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1594370758}
   agent: {fileID: 335722284}
+  idleRange: 1
+  defaultState: 0
 --- !u!1 &434399752
 GameObject:
   m_ObjectHideFlags: 0
@@ -1575,14 +1577,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 974268758}
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1.56, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 335722288}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!81 &974268760
 AudioListener:
   m_ObjectHideFlags: 0
@@ -3369,6 +3371,11 @@ MonoBehaviour:
   speed: 5
   gravity: -9.8
   jumpHeight: 0.4
+  standheight: 2
+  crouchHeight: 1
+  crouchTime: 1
+  walkSpeed: 5
+  sprintSpeed: 8
 --- !u!143 &1594370763
 CharacterController:
   m_ObjectHideFlags: 0
@@ -3583,7 +3590,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
   m_StaticEditorFlags: 8
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1659286958
 Transform:
   m_ObjectHideFlags: 0

@@ -9,13 +9,21 @@ public class EnemyStateHandler : MonoBehaviour
 
     [SerializeField] private GameObject player;
     [SerializeField] private NavMeshAgent agent;
+    [SerializeField] private float idleRange;
     private Vector3 patrolArea;
     LayerMask layerMask;
     private Vector3 rayDir;
+    [SerializeField] AIState defaultState;
 
     void Awake()
     {
         layerMask = LayerMask.GetMask("Wall", "Player");
+        defaultState = AIState.Idle;
+    }
+
+    void Start()
+    {
+        enemyState = defaultState;
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +61,12 @@ public class EnemyStateHandler : MonoBehaviour
             case AIState.Idle:
                 //idle
                 //pick random location on map as direction, walk there, look around
+                Vector3 point;
+            if (RandomPoint(transform.position, idleRange, out point)) 
+            {
+                Debug.DrawRay(point, Vector3.up, Color.blue, 1.0f); 
+                agent.SetDestination(point);
+            }
             DetermineTerritory();
             break;
             case AIState.Patrol:
@@ -118,6 +132,22 @@ public class EnemyStateHandler : MonoBehaviour
         
     }
 
+    bool RandomPoint(Vector3 center, float idleRange, out Vector3 result)
+    {
+
+        Vector3 randomPoint = center + Random.insideUnitSphere * idleRange; //random point in a sphere 
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas)) //documentation: https://docs.unity3d.com/ScriptReference/AI.NavMesh.SamplePosition.html
+        { 
+            result = hit.position;
+            return true;
+        }
+
+        result = Vector3.zero;
+        return false;
+    }
+
+
     void UpdateTerritory()
     {
         DetermineTerritory();
@@ -125,8 +155,12 @@ public class EnemyStateHandler : MonoBehaviour
 
     void Update()
     {
-        //DetermineAction;
-        //DetermineTerritory;
+        if(agent.remainingDistance <= agent.stoppingDistance) //done with path
+        {
+            enemyState = AIState.Idle;
+            DetermineAction();
+            
+        }
     }
 
 }
