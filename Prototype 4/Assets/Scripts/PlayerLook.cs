@@ -7,8 +7,8 @@ public class PlayerLook : MonoBehaviour
     public Camera cam;
     private float xRotation = 0f;
 
-    public float xSensitivity = 30f;
-    public float ySensitivity = 30f;
+    public float xSensitivity = 70f;
+    public float ySensitivity = 70f;
 
     private void Awake()
 {
