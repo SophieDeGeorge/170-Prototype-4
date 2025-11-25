@@ -99,9 +99,6 @@ public class EnemyStateHandler : MonoBehaviour
         {
             UpdateEnemy();
             Debug.Log("Enemy Collider Triggered");
-            //enemyState = AIState.Chase;
-            //DetermineAction();
-            //agent.destination = other.transform.position;
         }
     }
 
@@ -111,23 +108,16 @@ public class EnemyStateHandler : MonoBehaviour
         if (Physics.Raycast(transform.position, player.GetComponent<Transform>().position - transform.position, out hit, layerMask))
         {
             Debug.DrawRay(transform.position, (player.GetComponent<Transform>().position - transform.position) * hit.distance, Color.yellow);
-            Debug.Log(hit.transform.name);
-            /*
-            if (hit.transform.IsChildOf(player.transform))
-            {
-                
-            }
-            if (hit.transform.parent.name == "Level Walls")
-            {
-                Debug.Log("Hit Wall");
-            } else
+            //Debug.Log(hit.transform.name);
+            
+            if (hit.transform.name == "Player")
             {
                 enemyState = AIState.Chase;
                 Debug.Log("Chase activated");
-                
+            } else
+            {
+                Debug.Log("Hit Wall");  
             }
-            */
-            
         }
         DetermineAction();
         
