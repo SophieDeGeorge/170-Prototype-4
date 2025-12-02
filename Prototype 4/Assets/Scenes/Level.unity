@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028292, g: 0.22571306, b: 0.30692118, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -954,8 +954,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1594370758}
   agent: {fileID: 335722284}
-  idleRange: 1
+  idleRange: 100
   defaultState: 0
+  patrolRange: 10
+  chaseSpeed: 4.5
+  idleSpeed: 3.5
 --- !u!1 &434399752
 GameObject:
   m_ObjectHideFlags: 0
@@ -4114,7 +4117,7 @@ GameObject:
   - component: {fileID: 1502720307}
   m_Layer: 7
   m_Name: wall (5)
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
   m_StaticEditorFlags: 8
@@ -4476,8 +4479,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 1153227198}
-  xSensitivity: 30
-  ySensitivity: 30
+  xSensitivity: 70
+  ySensitivity: 70
 --- !u!114 &1594370760
 MonoBehaviour:
   m_ObjectHideFlags: 0
