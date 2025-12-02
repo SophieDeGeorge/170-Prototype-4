@@ -7,14 +7,19 @@ public class PlayerLook : MonoBehaviour
     public Camera cam;
     private float xRotation = 0f;
 
-    public float xSensitivity = 70f;
-    public float ySensitivity = 70f;
+    public float xSensitivity = 30f;
+    public float ySensitivity = 30f;
 
     private void Awake()
-{
-    if (cam == null)
-        cam = GetComponentInChildren<Camera>() ?? Camera.main;
-}
+    {
+        if (cam == null)
+            cam = GetComponentInChildren<Camera>() ?? Camera.main;
+    }
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 
     // Start is called before the first frame update
     public void ProcessLook(Vector2 input)
