@@ -69,21 +69,22 @@ public class EnemyStateHandler : MonoBehaviour
         switch (enemyState)
         {
             case AIState.Idle:
+            //Debug.Log("idle");
                 agent.speed = idleSpeed;
-                //pick random point on map
                 Vector3 point;
-                RandomPoint(transform.position, idleRange, out point);
-                //destination = point
+                point = NewRandomPoint(transform.position, idleRange, out point);
+                //Debug.DrawRay(point, Vector3.up, UnityEngine.Color.yellow, 100);
+                //Debug.Log("Idle Destination: " + agent.destination);
                 agent.SetDestination(point);
         
             break;
             case AIState.Patrol: //find the code that determines when patrol starts, setup patrolPoints[] there
-                Debug.Log("patrol");
+                //Debug.Log("patrol");
                 agent.SetDestination(patrolPoints.Pop());
             
             break;
             case AIState.Chase:
-                Debug.Log("chase");
+                //Debug.Log("chase");
                 agent.speed = chaseSpeed;
                 agent.SetDestination(player.transform.position);
             break;
@@ -121,14 +122,11 @@ public class EnemyStateHandler : MonoBehaviour
                     playerIsSeen = true;
                     enemyState = AIState.Chase;
                     DetermineAction();
-                } else
+                } else if (hit.transform.name != "Player")
                 {
                     playerIsSeen = false;
                 }
             }
-        } else
-        {
-            playerIsSeen = false;
         }
     }
 
@@ -143,10 +141,14 @@ public class EnemyStateHandler : MonoBehaviour
         }
         if (enemyState == AIState.Patrol)
         {
+
+            //Debug.Log("Patrol Points Left" + patrolPoints.Count);
+            //Debug.Log("Going to: " + agent.destination);
             if (agent.remainingDistance == 0)
             {
                 if (patrolPoints.Count == 0)
                 {
+                    //Debug.Log("Out of patrol points, returning to idle");
                     enemyState = AIState.Idle;
                 }
                 DetermineAction();
@@ -161,11 +163,13 @@ public class EnemyStateHandler : MonoBehaviour
             {
                 enemyState = AIState.Patrol;
                 patrolPoints.Clear();
-                numPoints = UnityEngine.Random.Range(2, 6);
+                numPoints = 2;
+                //UnityEngine.Random.Range(2, 3);
                 for (int i = 0; i < numPoints; i++)
                 {
                     Vector3 point;
-                    RandomPoint(agent.destination, patrolRange, out point);
+                    point = NewRandomPoint(agent.destination, patrolRange, out point);
+                    //Debug.DrawRay(point, Vector3.up, UnityEngine.Color.yellow, 100);
                     patrolPoints.Push(point);
                 }
                 DetermineAction();
@@ -184,9 +188,22 @@ public class EnemyStateHandler : MonoBehaviour
             result = hit.position;
             return true;
         }
-
+        
         result = Vector3.zero;
         return false;
+    }
+
+    Vector3 NewRandomPoint(Vector3 center, float idleRange, out Vector3 result)
+    {
+
+        Vector3 randomPoint = center + UnityEngine.Random.insideUnitSphere * idleRange; //random point in a sphere 
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas)) //documentation: https://docs.unity3d.com/ScriptReference/AI.NavMesh.SamplePosition.html
+        { 
+            result = hit.position;
+            return result;
+        }
+        return NewRandomPoint(center, idleRange, out result);
     }
 
 
