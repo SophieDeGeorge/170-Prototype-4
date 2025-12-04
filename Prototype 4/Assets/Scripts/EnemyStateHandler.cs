@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Numerics;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -12,20 +13,22 @@ public class EnemyStateHandler : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private float idleRange;
-    private Vector3 patrolArea;
+    private UnityEngine.Vector3 patrolArea;
     LayerMask layerMask;
-    private Vector3 rayDir;
-    private Vector3 rayStart;
+    private UnityEngine.Vector3 rayDir;
+    private UnityEngine.Vector3 rayStart;
     [SerializeField] AIState defaultState;
-    private Stack<Vector3> patrolPoints = new Stack<Vector3>();
+    private Stack<UnityEngine.Vector3> patrolPoints = new Stack<UnityEngine.Vector3>();
     private int numPoints;
     [SerializeField] private float patrolRange;
     private bool playerIsSeen = false;
     [SerializeField] private float chaseSpeed;
     [SerializeField] private float idleSpeed;
-    //[SerializeField] private GameObject creep_mesh;
     [SerializeField] private MonsterAnimScript mAnim;
     [SerializeField] private float rayHeightTest;
+    [SerializeField] private GameObject rayStartObject;
+    private UnityEngine.Vector3 rayStartPoint;
+    private UnityEngine.Vector3 rayStartTF;
 
 
     void Awake()
@@ -40,6 +43,7 @@ public class EnemyStateHandler : MonoBehaviour
     {
         //mAnim = GetComponent<MonsterAnimScript>();
         enemyState = defaultState;
+        rayStartPoint = rayStartObject.GetComponent<Transform>().position;
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,9 +81,9 @@ public class EnemyStateHandler : MonoBehaviour
             case AIState.Idle:
             //Debug.Log("idle");
                 agent.speed = idleSpeed;
-                Vector3 point;
+                UnityEngine.Vector3 point;
                 point = NewRandomPoint(transform.position, idleRange, out point);
-                //Debug.DrawRay(point, Vector3.up, UnityEngine.Color.yellow, 100);
+                //Debug.DrawRay(point, UnityEngine.Vector3.up, UnityEngine.Color.yellow, 100);
                 //Debug.Log("Idle Destination: " + agent.destination);
                 agent.SetDestination(point);
         
@@ -116,39 +120,21 @@ public class EnemyStateHandler : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
-        //Debug.Log("trigger stay");
         if (other.CompareTag("Player"))
         {
-            //Debug.Log("Player in collider");
-            RaycastHit hit;
-            
-            rayStart = new Vector3(transform.position.x, transform.position.y + rayHeightTest, transform.position.z);
-            rayDir = (player.GetComponent<Transform>().position - rayStart);
-            if (Physics.Raycast(rayStart, rayDir.normalized, out hit, layerMask))
-            {
-                //rayDir = (player.GetComponent<Transform>().position - transform.position).normalized;
-                //rayStart = ()
-                Debug.DrawRay(rayStart, rayDir, UnityEngine.Color.yellow);
 
-                if (hit.transform.name == "Player")
+            if (RaycastHitPlayer())
+            {
+                playerIsSeen = true;
+                if (enemyState != AIState.Chase)
                 {
-                    playerIsSeen = true;
-                    //Debug.Log("(127)PlayerIsSeen Changed to: " + playerIsSeen);
-                    if (enemyState != AIState.Chase)
-                    {
-                        enemyState = AIState.Chase;
-                        DetermineAction();
-                    }
-                    
-                } else if (hit.transform.name != "Player")
-                {
-                    playerIsSeen = false;
-                    //Debug.Log("(137) PlayerIsSeen Changed to: " + playerIsSeen);
+                    enemyState = AIState.Chase;
+                    DetermineAction();
                 }
+            } else
+            {
+                playerIsSeen = false;
             }
-        } else
-        {
-            //Debug.Log("Player not in collider");
         }
     }
 
@@ -167,7 +153,7 @@ public class EnemyStateHandler : MonoBehaviour
             {
                 if (patrolPoints.Count == 0)
                 {
-                    Debug.Log("Out of patrol points, returning to idle");
+                    //Debug.Log("Out of patrol points, returning to idle");
                     enemyState = AIState.Idle;
                 }
                 DetermineAction();
@@ -175,9 +161,8 @@ public class EnemyStateHandler : MonoBehaviour
         }
         if (enemyState == AIState.Chase)
         {   
-            RaycastHit hit;
-            Physics.Raycast(transform.position, player.transform.position - transform.position, out hit, layerMask);
-            if (hit.transform.name == "Player")
+            
+            if (RaycastHitPlayer())
             {
                 playerIsSeen = true;
                 //Debug.Log("(171) PlayerIsSeen Changed to: " + playerIsSeen);
@@ -191,9 +176,9 @@ public class EnemyStateHandler : MonoBehaviour
                 //UnityEngine.Random.Range(2, 3);
                 for (int i = 0; i < numPoints; i++)
                 {
-                    Vector3 point;
+                    UnityEngine.Vector3 point;
                     point = NewRandomPoint(agent.destination, patrolRange, out point);
-                    //Debug.DrawRay(point, Vector3.up, UnityEngine.Color.yellow, 100);
+                    //Debug.DrawRay(point, UnityEngine.Vector3.up, UnityEngine.Color.yellow, 100);
                     patrolPoints.Push(point);
                 }
                 DetermineAction();
@@ -230,11 +215,30 @@ public class EnemyStateHandler : MonoBehaviour
 
     }
 
+    private bool RaycastHitPlayer()
+    {
+            RaycastHit hit;
+            rayStartPoint = rayStartObject.GetComponent<Transform>().position;
+            rayStartTF = rayStartObject.GetComponent<Transform>().position;
+            rayStartPoint = new UnityEngine.Vector3(rayStartTF.x, 3, rayStartTF.z);
+            rayDir = player.GetComponent<Transform>().position - rayStartPoint;
+            Physics.Raycast(rayStartPoint, rayDir.normalized, out hit, layerMask);
+            Debug.DrawRay(rayStartPoint, rayDir, UnityEngine.Color.yellow);
+            if (hit.transform.name == "Player")
+            {
+                return true;
+            } else
+        {
+            return false;
+        }
+            
+    }
 
-    Vector3 NewRandomPoint(Vector3 center, float idleRange, out Vector3 result)
+
+    UnityEngine.Vector3 NewRandomPoint(UnityEngine.Vector3 center, float idleRange, out UnityEngine.Vector3 result)
     {
 
-        Vector3 randomPoint = center + UnityEngine.Random.insideUnitSphere * idleRange; //random point in a sphere 
+        UnityEngine.Vector3 randomPoint = center + UnityEngine.Random.insideUnitSphere * idleRange; //random point in a sphere 
         NavMeshHit hit;
         if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas)) //documentation: https://docs.unity3d.com/ScriptReference/AI.NavMesh.SamplePosition.html
         { 
