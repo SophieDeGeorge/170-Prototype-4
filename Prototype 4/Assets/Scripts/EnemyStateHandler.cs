@@ -15,25 +15,31 @@ public class EnemyStateHandler : MonoBehaviour
     private Vector3 patrolArea;
     LayerMask layerMask;
     private Vector3 rayDir;
+    private Vector3 rayStart;
     [SerializeField] AIState defaultState;
     private Stack<Vector3> patrolPoints = new Stack<Vector3>();
     private int numPoints;
     [SerializeField] private float patrolRange;
-    private bool playerIsSeen;
+    private bool playerIsSeen = false;
     [SerializeField] private float chaseSpeed;
     [SerializeField] private float idleSpeed;
+    //[SerializeField] private GameObject creep_mesh;
+    [SerializeField] private MonsterAnimScript mAnim;
+    [SerializeField] private float rayHeightTest;
 
 
     void Awake()
     {
+        mAnim = GetComponentInChildren<MonsterAnimScript>();
+        //mAnim = creep_mesh.GetComponent<MonsterAnimScript>();
         layerMask = LayerMask.GetMask("Wall", "Player");
         defaultState = AIState.Idle;
     }
 
     void Start()
     {
+        //mAnim = GetComponent<MonsterAnimScript>();
         enemyState = defaultState;
-        playerIsSeen = false;
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,23 +116,39 @@ public class EnemyStateHandler : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
+        //Debug.Log("trigger stay");
         if (other.CompareTag("Player"))
         {
+            //Debug.Log("Player in collider");
             RaycastHit hit;
-            if (Physics.Raycast(transform.position, player.transform.position - transform.position, out hit, layerMask))
+            
+            rayStart = new Vector3(transform.position.x, transform.position.y + rayHeightTest, transform.position.z);
+            rayDir = (player.GetComponent<Transform>().position - rayStart);
+            if (Physics.Raycast(rayStart, rayDir.normalized, out hit, layerMask))
             {
-                rayDir = (player.GetComponent<Transform>().position - transform.position).normalized;
+                //rayDir = (player.GetComponent<Transform>().position - transform.position).normalized;
+                //rayStart = ()
+                Debug.DrawRay(rayStart, rayDir, UnityEngine.Color.yellow);
 
-                if ((hit.transform.name == "Player") && (enemyState != AIState.Chase))
+                if (hit.transform.name == "Player")
                 {
                     playerIsSeen = true;
-                    enemyState = AIState.Chase;
-                    DetermineAction();
+                    //Debug.Log("(127)PlayerIsSeen Changed to: " + playerIsSeen);
+                    if (enemyState != AIState.Chase)
+                    {
+                        enemyState = AIState.Chase;
+                        DetermineAction();
+                    }
+                    
                 } else if (hit.transform.name != "Player")
                 {
                     playerIsSeen = false;
+                    //Debug.Log("(137) PlayerIsSeen Changed to: " + playerIsSeen);
                 }
             }
+        } else
+        {
+            //Debug.Log("Player not in collider");
         }
     }
 
@@ -141,25 +163,27 @@ public class EnemyStateHandler : MonoBehaviour
         }
         if (enemyState == AIState.Patrol)
         {
-
-            //Debug.Log("Patrol Points Left" + patrolPoints.Count);
-            //Debug.Log("Going to: " + agent.destination);
             if (agent.remainingDistance == 0)
             {
                 if (patrolPoints.Count == 0)
                 {
-                    //Debug.Log("Out of patrol points, returning to idle");
+                    Debug.Log("Out of patrol points, returning to idle");
                     enemyState = AIState.Idle;
                 }
                 DetermineAction();
             }
         }
         if (enemyState == AIState.Chase)
-        {
-            if (playerIsSeen)
+        {   
+            RaycastHit hit;
+            Physics.Raycast(transform.position, player.transform.position - transform.position, out hit, layerMask);
+            if (hit.transform.name == "Player")
             {
-                agent.SetDestination(player.transform.position);
-            } else
+                playerIsSeen = true;
+                //Debug.Log("(171) PlayerIsSeen Changed to: " + playerIsSeen);
+            }
+            agent.SetDestination(player.transform.position);
+            if (!playerIsSeen)
             {
                 enemyState = AIState.Patrol;
                 patrolPoints.Clear();
@@ -178,20 +202,34 @@ public class EnemyStateHandler : MonoBehaviour
         
     }
 
-    bool RandomPoint(Vector3 center, float idleRange, out Vector3 result)
+    void UpdateAnimations()
     {
-
-        Vector3 randomPoint = center + UnityEngine.Random.insideUnitSphere * idleRange; //random point in a sphere 
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas)) //documentation: https://docs.unity3d.com/ScriptReference/AI.NavMesh.SamplePosition.html
-        { 
-            result = hit.position;
-            return true;
+        if (enemyState == AIState.Idle)
+        {
+            if (agent.remainingDistance > 0)
+            {
+                mAnim.PlayAnimation(MonsterAnimScript.AnimState.Walk);
+            } else
+            {
+                mAnim.PlayAnimation(MonsterAnimScript.AnimState.Idle);
+            }
+        } else if (enemyState == AIState.Patrol)
+        {
+            if (agent.remainingDistance > 0)
+            {
+                mAnim.PlayAnimation(MonsterAnimScript.AnimState.Run);
+            } else
+            {
+                mAnim.PlayAnimation(MonsterAnimScript.AnimState.Idle);
+            }
+        } else if (enemyState == AIState.Chase)
+        {
+            mAnim.PlayAnimation(MonsterAnimScript.AnimState.Run);
         }
-        
-        result = Vector3.zero;
-        return false;
+        //Debug.Log("enemyState: " + enemyState);
+
     }
+
 
     Vector3 NewRandomPoint(Vector3 center, float idleRange, out Vector3 result)
     {
@@ -215,6 +253,8 @@ public class EnemyStateHandler : MonoBehaviour
     void Update()
     {
         UpdateEnemy();
+        UpdateAnimations();
+        //Debug.Log("Player is Seen: " + playerIsSeen);
     }
 
 }
