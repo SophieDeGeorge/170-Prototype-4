@@ -21,8 +21,15 @@ public class InputManager : MonoBehaviour
 
         onFoot.Jump.performed += ctx => motor.Jump();
 
-        onFoot.Crouch.performed += ctx => motor.Crouch();
-        onFoot.Sprint.performed += ctx => motor.Sprint();
+        // onFoot.Crouch.performed += ctx => motor.Crouch();
+        // onFoot.Sprint.performed += ctx => motor.Sprint();
+        // HOLD CROUCH
+        onFoot.Crouch.performed += ctx => motor.SetCrouch(true);
+        onFoot.Crouch.canceled  += ctx => motor.SetCrouch(false);
+
+        //  HOLD SPRINT
+        onFoot.Sprint.performed += ctx => motor.SetSprint(true);
+        onFoot.Sprint.canceled  += ctx => motor.SetSprint(false);
     }
 
     void FixedUpdate(){
@@ -30,17 +37,21 @@ public class InputManager : MonoBehaviour
         motor.ProcessMove(onFoot.Movement.ReadValue<Vector2>());
     }
      void LateUpdate(){
+        //mouse look
         look.ProcessLook(onFoot.Look.ReadValue<Vector2>());
     }
-    // Update is called once per frame
-    // void Update()
-    // {
-        
-    // }
-    private void OnEnable(){
+ 
+    void OnEnable(){
+        // make sure input is initialized before enabling
+        if (PlayerInput == null)
+        {
+            PlayerInput = new PlayerInput();
+            onFoot = PlayerInput.OnFoot;
+        }
+
         onFoot.Enable();
     }
-    private void onDisable(){
+    void onDisable(){
         onFoot.Disable();
     }
 }

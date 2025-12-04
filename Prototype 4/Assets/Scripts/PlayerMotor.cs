@@ -9,24 +9,29 @@ public class PlayerMotor : MonoBehaviour
     private bool isGrounded;
 
     // movement
-    public float speed = 5f;
+    public float speed = 4f;
     public float gravity = -9.8f;
     public float jumpHeight = 3f;
 
     // crouch
-    public float standheight = 2f;
+    public float standHeight = 2f;
     public float crouchHeight = 1f;
-    public float crouchTime = 1f;
-    
+    public float crouchSpeed = 2.5f;
+    public float crouchTime = 0.2f;   // a bit faster feels nicer, but tweak
+
     private bool crouching = false;
     private bool lerpCrouch = false;
     private float crouchTimer = 0f;
     
     // sprint
-    public float walkSpeed = 5f;
+    public float walkSpeed = 4f;
     public float sprintSpeed = 8f;
-    private bool sprinting = false;
+    // private bool sprinting = false;
     
+    private bool sprintHeld = false;
+    private bool crouchHeld = false;
+
+    private Vector2 moveInput = Vector2.zero;
 
 
     // Start is called before the first frame update
@@ -34,68 +39,90 @@ public class PlayerMotor : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         speed = walkSpeed;
+        controller.height = standHeight;
     }
 
     // Update is called once per frame
     void Update()
     {
         isGrounded = controller.isGrounded;
+        HandleCrouchLerp();
 
-        // added for crounching
-        isGrounded = controller.isGrounded;
-        if (lerpCrouch)
+
+        speed = sprintHeld ? sprintSpeed : walkSpeed;
+
+        if (crouching)
         {
-            crouchTimer += Time.deltaTime;
-            float p = crouchTimer / 1;
-            p *= p;
-            if (crouching)
-                controller.height = Mathf.Lerp(controller.height, 1,p);
-            else
-                controller.height = Mathf.Lerp(controller.height,2,p);
-            if (p > 1)
-            {
-                lerpCrouch = false;
-                crouchTimer = 0f;
-            }
+            speed = crouchSpeed;                   // slower while crouched
+        }
+        else
+        {
+            speed = sprintHeld ? sprintSpeed : walkSpeed;
         }
     }
 
-    //should recieve inputs from Inputmanage.cs and apply it to character controller
+    void HandleCrouchLerp()
+    {
+        if (!lerpCrouch) return;
+
+        crouchTimer += Time.deltaTime;
+        float p = crouchTimer / crouchTime;
+        p *= p; // ease-in
+
+        float targetHeight = crouching ? crouchHeight : standHeight;
+        controller.height = Mathf.Lerp(controller.height, targetHeight, p);
+
+        if (p >= 1f)
+        {
+            lerpCrouch = false;
+            crouchTimer = 0f;
+        }
+        }
+
     public void ProcessMove(Vector2 input)
     {
-        Vector3 moveDirection = Vector3.zero;
-        moveDirection.x = input.x;
-        moveDirection.z = input.y; 
-        controller.Move(transform.TransformDirection(moveDirection) * speed * Time.deltaTime);
+        moveInput = input;
+
+        Vector3 moveDir = Vector3.zero;
+        moveDir.x = input.x;
+        moveDir.z = input.y;
+
+        controller.Move(transform.TransformDirection(moveDir) * speed * Time.deltaTime);
+
+        // gravity
         playerVelocity.y += gravity * Time.deltaTime;
         if(isGrounded && playerVelocity.y < 0)
             playerVelocity.y = -2f;
         controller.Move(playerVelocity * Time.deltaTime);
-        //Debug.Log(playerVelocity.y);
     }
 
     public void Jump()
     {
         if (isGrounded)
         {
-            playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
+            playerVelocity.y = Mathf.Sqrt(jumpHeight * -3f * gravity);
         }
     }
 
-    public void Crouch()
+    public void SetCrouch(bool isHeld)
     {
-        crouching = !crouching;
+        if (crouchHeld == isHeld) return; // no change
+
+        crouchHeld = isHeld;
+        crouching = isHeld;
+    
+        if (crouching)
+        {
+            sprintHeld = false;          // stop sprinting when crouch starts
+        }
+
         crouchTimer = 0f;
         lerpCrouch = true;
     }
 
-    public void Sprint()
+    public void SetSprint(bool isHeld)
     {
-        sprinting = !sprinting;
-        if (sprinting)
-            speed = sprintSpeed;
-        else
-            speed = walkSpeed;
+        sprintHeld = isHeld;
     }
+
 }
- 
