@@ -29,6 +29,7 @@ public class EnemyStateHandler : MonoBehaviour
     [SerializeField] private GameObject rayStartObject;
     private UnityEngine.Vector3 rayStartPoint;
     private UnityEngine.Vector3 rayStartTF;
+    private TerritoryEffects tEffects;
 
 
     void Awake()
@@ -42,6 +43,7 @@ public class EnemyStateHandler : MonoBehaviour
     void Start()
     {
         //mAnim = GetComponent<MonsterAnimScript>();
+        tEffects = player.GetComponentInChildren<TerritoryEffects>();
         enemyState = defaultState;
         rayStartPoint = rayStartObject.GetComponent<Transform>().position;
     }
@@ -104,16 +106,26 @@ public class EnemyStateHandler : MonoBehaviour
 
     void DetermineTerritory()
     {
+        if (enemyState == AIState.Chase)
+        {
+            territoryState = TerritoryState.Danger;
+        } else if (enemyState == AIState.Patrol)
+        {
+            territoryState = TerritoryState.Warning;
+        } else
+        {
+            territoryState = TerritoryState.Neutral;
+        }
         switch (territoryState)
         {
             case TerritoryState.Neutral:
-                //neutral
+                tEffects.NeutralTerritory();
             break;
             case TerritoryState.Warning:
-                //warning
+                tEffects.WarningTerritory();
             break;
             case TerritoryState.Danger:
-                //danger
+                tEffects.DangerTerritory();
             break;
         }  
     }
@@ -222,8 +234,10 @@ public class EnemyStateHandler : MonoBehaviour
             rayStartTF = rayStartObject.GetComponent<Transform>().position;
             rayStartPoint = new UnityEngine.Vector3(rayStartTF.x, 3, rayStartTF.z);
             rayDir = player.GetComponent<Transform>().position - rayStartPoint;
+
             Physics.Raycast(rayStartPoint, rayDir.normalized, out hit, layerMask);
             Debug.DrawRay(rayStartPoint, rayDir, UnityEngine.Color.yellow);
+            
             if (hit.transform.name == "Player")
             {
                 return true;
@@ -248,17 +262,11 @@ public class EnemyStateHandler : MonoBehaviour
         return NewRandomPoint(center, idleRange, out result);
     }
 
-
-    void UpdateTerritory()
-    {
-        DetermineTerritory();
-    }
-
     void Update()
     {
         UpdateEnemy();
         UpdateAnimations();
-        //Debug.Log("Player is Seen: " + playerIsSeen);
+        DetermineTerritory();
     }
 
 }
